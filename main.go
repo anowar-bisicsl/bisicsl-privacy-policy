@@ -13,6 +13,7 @@ import (
 var (
 	indexTmpl         *template.Template
 	bmpCpTransactTmpl *template.Template
+	deleteAccountTmpl *template.Template
 )
 
 // initTemplates initializes the page-specific template pools to avoid block namespace collision.
@@ -21,6 +22,7 @@ func initTemplates() {
 
 	indexTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "index.html")))
 	bmpCpTransactTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "bmp_cp_transact.html")))
+	deleteAccountTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "delete_account.html")))
 }
 
 // securityHeaders middleware injects production-grade HTTP security headers.
@@ -90,6 +92,53 @@ func main() {
 
 	mux.HandleFunc("/apps/bmp-cp-transact", func(w http.ResponseWriter, r *http.Request) {
 		renderPage(w, bmpCpTransactTmpl, getPageData("Privacy Policy - BMP CP Transact"))
+	})
+
+	mux.HandleFunc("/apps/bmp-cp-transact/delete-account", func(w http.ResponseWriter, r *http.Request) {
+		data := struct {
+			PageData
+			Success      bool
+			ErrorMessage string
+			CPCode       string
+			Phone        string
+			FullName     string
+		}{
+			PageData: getPageData("Delete Account Request - BMP CP Transact"),
+		}
+
+		if r.Method == http.MethodPost {
+			if err := r.ParseForm(); err != nil {
+				data.ErrorMessage = "Failed to process request. Please try again."
+				renderPage(w, deleteAccountTmpl, data)
+				return
+			}
+
+			data.CPCode = r.FormValue("cp_code")
+			data.Phone = r.FormValue("phone")
+			data.FullName = r.FormValue("full_name")
+			confirmDelete := r.FormValue("confirm_delete")
+			reason := r.FormValue("reason")
+
+			if data.CPCode == "" || data.Phone == "" || data.FullName == "" {
+				data.ErrorMessage = "Please fill in all required fields (Full Name, CP Code, and Phone Number)."
+				renderPage(w, deleteAccountTmpl, data)
+				return
+			}
+
+			if confirmDelete != "yes" {
+				data.ErrorMessage = "You must check the box to confirm you want to delete your account."
+				renderPage(w, deleteAccountTmpl, data)
+				return
+			}
+
+			// Audit log to Cloud Logging stdout
+			log.Printf("[AUDIT_LOG][DELETION_REQUEST] App: BMP CP Transact | Name: %s | CP Code: %s | Phone: %s | Reason: %s | Time: %s",
+				data.FullName, data.CPCode, data.Phone, reason, time.Now().Format(time.RFC3339))
+
+			data.Success = true
+		}
+
+		renderPage(w, deleteAccountTmpl, data)
 	})
 
 	// Wrap routing with security headers middleware

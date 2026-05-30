@@ -1,0 +1,95 @@
+{{define "title"}}Delete Account Request - BMP CP Transact | BISICSL{{end}}
+
+{{define "content"}}
+<div style="max-width: 600px; margin: 0 auto; padding: 1.5rem 0;">
+    
+    <a href="/apps/bmp-cp-transact" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 2rem; font-weight: 500;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"></path>
+        </svg>
+        Back to Privacy Policy
+    </a>
+
+    <div class="policy-body" style="padding: 2.5rem;">
+        
+        {{if .Success}}
+        <!-- Success Screen -->
+        <div style="text-align: center; padding: 1.5rem 0;">
+            <div style="width: 64px; height: 64px; background-color: var(--accent-light); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h1 style="font-size: 1.8rem; margin-bottom: 1rem;">Request Submitted</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.05rem; line-height: 1.6;">
+                We have received and logged your account deletion request for the app <strong>BMP CP Transact</strong>.
+            </p>
+            <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); text-align: left; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5;">
+                <strong>Next Steps:</strong>
+                <ol style="margin-top: 0.5rem; margin-bottom: 0; padding-left: 1.25rem;">
+                    <li style="margin-bottom: 0.35rem;">Our operations team will verify the details (CP Code and Phone Number) in our registry records.</li>
+                    <li style="margin-bottom: 0.35rem;">A verification representative may contact you on your registered phone number to confirm the request.</li>
+                    <li>Your mobile application credentials will be permanently removed from the system within 30 days.</li>
+                </ol>
+            </div>
+            <a href="/" class="btn-primary" style="padding: 0.65rem 1.5rem;">Return to Homepage</a>
+        </div>
+        
+        {{else}}
+        <!-- Deletion Form Screen -->
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 1.8rem; margin-bottom: 0.75rem;">Account Deletion Request</h1>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+                If you are a registered Cooperative Promoter for <strong>BMP Microfinance</strong> and want to delete your mobile app login account and credentials for the <strong>BMP CP Transact</strong> app, please fill out the form below.
+            </p>
+            <div class="alert-note" style="margin-bottom: 0;">
+                <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-secondary);">
+                    <strong>Data Scope Notice:</strong> Requesting account deletion will permanently delete your authentication details (username, encrypted password hash) from our active database. Please note that this will <strong>not</strong> affect or delete core cooperative audit ledgers, historical member collections, or promoter transaction records, which are legally mandated to be retained under multi-state cooperative societies regulatory guidelines.
+                </p>
+            </div>
+        </div>
+
+        {{if .ErrorMessage}}
+        <div style="background-color: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; color: #fca5a5; padding: 1rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 1.5rem; font-size: 0.9rem;">
+            {{.ErrorMessage}}
+        </div>
+        {{end}}
+
+        <form method="POST" action="/apps/bmp-cp-transact/delete-account" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            
+            <div class="form-group">
+                <label for="full_name" class="form-label">Full Name *</label>
+                <input type="text" id="full_name" name="full_name" value="{{.FullName}}" class="form-input" required placeholder="Enter your full name as registered">
+            </div>
+
+            <div class="form-group">
+                <label for="cp_code" class="form-label">Cooperative Promoter Code (CP Code) *</label>
+                <input type="text" id="cp_code" name="cp_code" value="{{.CPCode}}" class="form-input" required placeholder="e.g. CP00123">
+            </div>
+
+            <div class="form-group">
+                <label for="phone" class="form-label">Registered Phone Number *</label>
+                <input type="tel" id="phone" name="phone" value="{{.Phone}}" class="form-input" required placeholder="Enter your registered 10-digit number">
+            </div>
+
+            <div class="form-group">
+                <label for="reason" class="form-label">Reason for Deletion (Optional)</label>
+                <textarea id="reason" name="reason" rows="3" class="form-input" style="resize: vertical; font-family: inherit;" placeholder="Please tell us why you wish to delete your mobile app access..."></textarea>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                <input type="checkbox" id="confirm_delete" name="confirm_delete" value="yes" required style="margin-top: 0.35rem; cursor: pointer;">
+                <label for="confirm_delete" style="font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; line-height: 1.4;">
+                    I confirm that I request the permanent deletion of my login credentials for the BMP CP Transact application. I understand this action is irreversible and I will lose access to the app.
+                </label>
+            </div>
+
+            <button type="submit" class="btn-primary" style="justify-content: center; padding: 0.75rem; font-weight: 600; border-radius: var(--radius-md); margin-top: 0.5rem;">
+                Submit Deletion Request
+            </button>
+        </form>
+        {{end}}
+
+    </div>
+</div>
+{{end}}
