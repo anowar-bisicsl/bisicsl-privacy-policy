@@ -114,7 +114,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	log.Printf("Starting secure BISICSL Privacy Policy server on port %s", port)
+	log.Printf("Starting secure server on port %s", port)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server startup failed: %v", err)
 	}
