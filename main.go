@@ -11,9 +11,11 @@ import (
 )
 
 var (
-	indexTmpl         *template.Template
-	bmpCpTransactTmpl *template.Template
-	deleteAccountTmpl *template.Template
+	indexTmpl                 *template.Template
+	bmpCpTransactTmpl         *template.Template
+	deleteAccountTmpl         *template.Template
+	modaldarEnterpriseTmpl    *template.Template
+	deleteAccountModaldarTmpl *template.Template
 )
 
 // initTemplates initializes the page-specific template pools to avoid block namespace collision.
@@ -23,6 +25,8 @@ func initTemplates() {
 	indexTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "index.html")))
 	bmpCpTransactTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "bmp_cp_transact.html")))
 	deleteAccountTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "delete_account.html")))
+	modaldarEnterpriseTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "modaldar_enterprise.html")))
+	deleteAccountModaldarTmpl = template.Must(template.ParseFiles(layoutPath, filepath.Join("templates", "delete_account_modaldar.html")))
 }
 
 // securityHeaders middleware injects production-grade HTTP security headers.
@@ -139,6 +143,57 @@ func main() {
 		}
 
 		renderPage(w, deleteAccountTmpl, data)
+	})
+
+	mux.HandleFunc("/apps/modaldar-enterprise", func(w http.ResponseWriter, r *http.Request) {
+		renderPage(w, modaldarEnterpriseTmpl, getPageData("Privacy Policy - Modaldar Enterprise"))
+	})
+
+	mux.HandleFunc("/apps/modaldar-enterprise/delete-account", func(w http.ResponseWriter, r *http.Request) {
+		data := struct {
+			PageData
+			Success      bool
+			ErrorMessage string
+			Email        string
+			Phone        string
+			FullName     string
+		}{
+			PageData: getPageData("Delete Account Request - Modaldar Enterprise"),
+		}
+
+		if r.Method == http.MethodPost {
+			if err := r.ParseForm(); err != nil {
+				data.ErrorMessage = "Failed to process request. Please try again."
+				renderPage(w, deleteAccountModaldarTmpl, data)
+				return
+			}
+
+			data.Email = r.FormValue("email")
+			data.Phone = r.FormValue("phone")
+			data.FullName = r.FormValue("full_name")
+			confirmDelete := r.FormValue("confirm_delete")
+			reason := r.FormValue("reason")
+
+			if data.Email == "" || data.Phone == "" || data.FullName == "" {
+				data.ErrorMessage = "Please fill in all required fields (Full Name, Email Address, and Phone Number)."
+				renderPage(w, deleteAccountModaldarTmpl, data)
+				return
+			}
+
+			if confirmDelete != "yes" {
+				data.ErrorMessage = "You must check the box to confirm you want to delete your account."
+				renderPage(w, deleteAccountModaldarTmpl, data)
+				return
+			}
+
+			// Audit log to Cloud Logging stdout for tracking deletion requests
+			log.Printf("[AUDIT_LOG][DELETION_REQUEST] App: Modaldar Enterprise | Name: %s | Email: %s | Phone: %s | Reason: %s | Time: %s",
+				data.FullName, data.Email, data.Phone, reason, time.Now().Format(time.RFC3339))
+
+			data.Success = true
+		}
+
+		renderPage(w, deleteAccountModaldarTmpl, data)
 	})
 
 	// Wrap routing with security headers middleware
